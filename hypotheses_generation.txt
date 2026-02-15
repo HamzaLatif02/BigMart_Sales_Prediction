@@ -1,0 +1,52 @@
+Hypothesis Generation
+
+To guide the modelling process, the following hypotheses were developed across store-level, product-level, customer-level, and macroeconomic factors.
+
+- Store-Level Hypotheses
+
+1. City Type: Stores located in urban or Tier 1 cities are expected to generate higher sales due to higher average income levels.
+
+2. Population Density: Stores in densely populated areas are likely to experience higher demand, leading to increased sales.
+
+3. Store Size: Larger stores may achieve higher sales as they function as one-stop destinations offering a wider range of products.
+
+4. Competition: Stores located near competitors may experience lower sales due to increased market competition.
+
+5. Marketing Efforts: Stores with strong marketing initiatives are expected to attract more customers and generate higher sales.
+
+6. Ambience & Service Quality: Well-maintained stores with professional and courteous staff are likely to attract higher footfall and improve customer retention.
+
+- Product-Level Hypotheses
+
+1. Brand Recognition: Branded products are expected to have higher sales due to stronger customer trust and perceived quality.
+
+2. Packaging: Visually appealing packaging may positively influence purchasing decisions.
+
+3. Product Utility: Daily-use essentials are likely to have higher sales volumes compared to niche or occasional-use products.
+
+4. Shelf Space Allocation: Products with larger display areas may attract more attention and achieve higher sales.
+
+5. In-Store Visibility: Products placed in high-visibility locations (e.g., near entrances) are expected to sell more.
+
+6. Advertising: Effective in-store advertising may increase product sales.
+
+7. Promotional Offers: Discounts and bundled offers are likely to boost sales performance.
+
+- Customer-Level Hypotheses
+
+1. Product-Market Fit: Stores that align product offerings with local customer preferences are expected to achieve higher sales.
+
+2. Occupation Level: Customers in higher-paying job roles may purchase higher-value products more frequently.
+
+3. Family Size: Larger households may spend more on groceries and household products.
+
+4. Annual Income: Customers with higher annual income are more likely to purchase premium or higher-priced items.
+
+5. Purchase History: Historical purchase behaviour can help predict product demand and sales frequency.
+
+- Macro-Level Hypotheses
+
+1. Environmental Policies: Government regulations promoting safe and sustainable environments may influence consumer purchasing decisions.
+
+2. Economic Growth: Strong economic growth can increase per capita income, leading to higher consumer spending and overall sales.
+
