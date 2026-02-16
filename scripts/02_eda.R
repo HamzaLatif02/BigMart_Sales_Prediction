@@ -124,3 +124,16 @@ combi[,Price_per_unit_wt := Item_MRP/Item_Weight]
 # Create new feature Item_MRP_clusters: binned feature for Item_MRP
 combi[,Item_MRP_clusters := ifelse(Item_MRP < 69, '1st', ifelse(Item_MRP >= 69 & Item_MRP < 136, '2nd', ifelse(Item_MRP >= 136 & Item_MRP < 203, '3rd', '4th')))]
 
+# ENCODING CATEGORICAL VARIABLES
+# Label encoding for the ordinal categorical variables
+combi[,Outlet_Size_num := ifelse(Outlet_Size == 'Small', 0, ifelse(Outlet_Size == 'Medium', 1, 2))]
+combi[,Outlet_Location_Type_num := ifelse(Outlet_Location_Type == 'Tier 3', 0, ifelse(Outlet_Location_Type == 'Tier 2', 1, 2))]
+# remove categorical variables after lebel encoding 
+combi[, c('Outlet_Size', 'Outlet_Location_Type') := NULL]
+
+# One hot encoding for the categorical variables
+ohe = dummyVars("~.", data = combi[,-c('Item_Identifier', 'Outlet_Establishment_Year', 'Item_Type')], fullRank = T)
+ohe_df = data.table(predict(ohe, combi[,-c('Item_Identifier', 'Outlet_Establishment_Year', 'Item_Type')]))
+combi = cbind(combi[,'Item_Identifier'], ohe_df)
+
+
