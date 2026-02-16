@@ -100,3 +100,27 @@ for (i in zero_index){
 }
 
 ggplot(combi) + geom_histogram(aes(Item_Visibility), bins = 100)
+
+# FEATURE ENGINEERING
+
+# Create new feature Item_Type_new: broader categories for the variable Item_Type
+perishable = c('Breads', 'Breakfast', 'Dairy', 'Fruits and Vegetables', 'Meat', 'Seafood')
+non_perishable = c('Baking Goods', 'Canned', 'Frozen Foods', 'Hard Drinks', 'Health and Hygiene', 'Household', 'Soft Drinks')
+
+combi[,Item_Type_new := ifelse(Item_Type %in% perishable, "perishable", ifelse(Item_Type %in% non_perishable, "non_perishable", "not_sure"))]
+
+# Create new feature Item_category: categorical variable derived from Item_Identifier ('DR', 'FD', 'NC') which stands foor ('Drinks', 'Food', 'Non-consumable')
+table(combi$Item_Type, substr(combi$Item_Identifier, 1, 2))
+combi[,Item_category := substr(combi$Item_Identifier, 1, 2)]
+combi$Item_Fat_Content[combi$Item_category == 'NC'] = 'Non-edible' # change fat_content value for non-consumable items
+
+# Create new feature Outlet_Years: years of operation for outlets
+combi[, Outlet_Years := 2013 - Outlet_Establishment_Year] # data was collected in 2013
+combi$Outlet_Establishment_Year = as.factor(combi$Outlet_Establishment_Year)
+
+# Create new feature Price_per_unit_wt: Item_MRP/Item_Weight
+combi[,Price_per_unit_wt := Item_MRP/Item_Weight]
+
+# Create new feature Item_MRP_clusters: binned feature for Item_MRP
+combi[,Item_MRP_clusters := ifelse(Item_MRP < 69, '1st', ifelse(Item_MRP >= 69 & Item_MRP < 136, '2nd', ifelse(Item_MRP >= 136 & Item_MRP < 203, '3rd', '4th')))]
+
