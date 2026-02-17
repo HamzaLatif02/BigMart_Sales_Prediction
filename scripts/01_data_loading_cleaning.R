@@ -5,6 +5,7 @@ library(caret) #used for modeling
 library(corrplot) #used for making correlation plot
 library(xgboost) #used for building XGBoost model
 library(cowplot) #used for combining multiple plots
+library(tidyr) #used to clean data in tidy format
 
 #load datasets
 train = fread("datasets/train_v9rqX0R.csv")
