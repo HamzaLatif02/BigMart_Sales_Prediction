@@ -1,0 +1,184 @@
+---
+title: "Big Mart Sales Prediction"
+author: "Hamza Latif"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+# Make paths reliable when knitting
+if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
+knitr::opts_knit$set(root.dir = here::here())
+```
+
+## Executive Summary
+
+This project predicts **Item_Outlet_Sales** for Big Mart using product- and store-level features (e.g., item type, MRP, outlet type, location tier).
+The workflow includes:
+
+* Data loading and combining train/test for consistent preprocessing
+* Exploratory Data Analysis (EDA) to understand distributions and relationships
+* Data cleaning (missing values + “zero visibility” fixes)
+* Feature engineering + encoding + scaling
+* Model training using cross-validation and RMSE
+* Submission generation for multiple models
+* Final comparison of CV RMSE vs leaderboard submission score
+
+**Primary metric:** RMSE (lower is better)
+
+---
+
+## 1. Libraries
+
+All required packages are loaded in a single file for consistency across scripts.
+
+```{r libraries}
+source(here::here("scripts", "00_libraries.R"))
+```
+
+---
+
+## 2. Data Loading
+
+This script loads the datasets and creates a combined dataset (`combi`) to support unified preprocessing.
+
+**Script used:** `scripts/01_data_loading_cleaning.R`
+**Creates/uses:** `train`, `test`, `submission`, `combi`
+
+```{r data-loading}
+source(here::here("scripts", "01_data_loading_cleaning.R"))
+```
+
+### Quick dataset checks
+
+```{r dataset-checks}
+dim(train); dim(test); dim(submission)
+names(train)
+str(train)
+```
+
+---
+
+## 3. Exploratory Data Analysis and Preprocessing
+
+This script performs:
+
+* Univariate analysis (target, numerical, categorical)
+* Bivariate analysis (sales vs key features)
+* Missing value treatment:
+
+  * `Item_Weight`: imputed using item-level mean
+  * `Item_Visibility`: replaces 0 values using item-level mean
+* Feature engineering:
+
+  * `Item_Type_new`, `Item_category`, `Outlet_Years`, `Price_per_unit_wt`, `Item_MRP_clusters`
+* Encoding:
+
+  * ordinal encoding for `Outlet_Size`, `Outlet_Location_Type`
+  * one-hot encoding via `caret::dummyVars`
+* Transformations:
+
+  * `log1p()` for skewed variables
+* Scaling:
+
+  * centering/scaling numeric predictors using `caret::preProcess`
+* Correlation heatmap for processed train features
+
+**Script used:** `scripts/02_eda.R`
+
+> Note: this script overwrites `train` and `test` at the end with the processed versions.
+> After it runs:
+>
+> * `train` = processed training set (still includes `Item_Outlet_Sales`)
+> * `test` = processed test set (target removed)
+
+```{r eda-preprocessing}
+source(here::here("scripts", "02_eda.R"))
+```
+
+### Preview processed data
+
+```{r processed-preview}
+dim(train)
+dim(test)
+head(train[, .(Item_Identifier, Item_Outlet_Sales)])
+```
+
+---
+
+## 4. Modelling
+
+Models are trained and evaluated using **cross-validation RMSE**, and predictions are saved into `/submission/`.
+
+**Script used:** `scripts/03_models.R`
+
+Models trained:
+
+* Linear Regression (trained on log1p(target) to avoid negative predictions)
+* Lasso Regression (glmnet via caret)
+* Ridge Regression (glmnet via caret)
+* Random Forest (ranger via caret)
+* XGBoost (native xgboost; CV run is performed but model uses `nrounds = 72` as in script)
+
+**Outputs:**
+
+* Submission CSVs saved in `submission/`
+* `rmse_summary` printed at the end of the script
+
+```{r modeling}
+source(here::here("scripts", "03_models.R"))
+```
+
+### RMSE summary (from modelling script)
+
+```{r rmse-summary}
+rmse_summary
+```
+
+---
+
+## 5. Results Comparison
+
+This final script visualises and compares:
+
+* CV RMSE vs Submission score (grouped bars)
+* Sorted RMSE chart (best highlighted)
+* Sorted submission chart (best highlighted)
+
+**Script used:** `scripts/04_results.R`
+**Creates/uses:** `model_results`, `model_results_long`, plotting helper functions
+
+```{r results}
+source(here::here("scripts", "04_results.R"))
+```
+
+### Results table used for plots
+
+```{r results-table}
+model_results
+```
+
+---
+
+## 6. Conclusion and Next Steps
+
+### Conclusion
+
+Across the models tested, **Random Forest** achieved the strongest performance in terms of **cross-validated RMSE** and also produced one of the strongest **submission scores**. This suggests that the relationships between features and sales are likely **non-linear**, and Random Forest captures interactions more effectively than linear models.
+
+### Next Steps
+
+* Tune XGBoost more systematically (use `best_iteration` from CV rather than a fixed `nrounds`)
+* Try feature selection / permutation importance review and remove noisy features
+* Test ensembling (Random Forest + XGBoost) to reduce error further
+* Add model interpretability (feature importance + SHAP for XGBoost)
