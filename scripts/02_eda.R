@@ -1,161 +1,263 @@
+# Big Mart Sales Prediction — EDA + Preprocessing
+
+# Load required libraries
+source("scripts/00_libraries.R")
+
 # UNIVARIATE ANALYSIS
 
-# Target variable
-ggplot(train) + geom_histogram(aes(train$Item_Outlet_Sales), binwidth = 100, fill = 'darkgreen') + xlab("Item_Outlet_Sales")
+# Target variable distribution
+ggplot(train) +
+  geom_histogram(aes(Item_Outlet_Sales), binwidth = 100, fill = "darkgreen") +
+  labs(x = "Item_Outlet_Sales", y = "Count", title = "Target Distribution: Item_Outlet_Sales") +
+  theme_minimal()
 
-# Independent variables (numerical variables)
-p1 = ggplot(combi) + geom_histogram(aes(Item_Weight), binwidth = 0.5, fill = 'blue')
-p2 = ggplot(combi) + geom_histogram(aes(Item_Visibility), binwidth = 0.005, fill = 'blue')
-p3 = ggplot(combi) + geom_histogram(aes(Item_MRP), binwidth = 1, fill = 'blue')
+# Numerical variables
+p1 = ggplot(combi) + geom_histogram(aes(Item_Weight), binwidth = 0.5, fill = "blue") +
+  labs(title = "Item_Weight", x = "Item_Weight", y = "Count") + theme_minimal()
+p2 = ggplot(combi) + geom_histogram(aes(Item_Visibility), binwidth = 0.005, fill = "blue") +
+  labs(title = "Item_Visibility", x = "Item_Visibility", y = "Count") + theme_minimal()
+p3 = ggplot(combi) + geom_histogram(aes(Item_MRP), binwidth = 1, fill = "blue") +
+  labs(title = "Item_MRP", x = "Item_MRP", y = "Count") + theme_minimal()
 
 plot_grid(p1, p2, p3, nrow = 1)
 
-# Independent variables (categorical variables)
-ggplot(combi %>% group_by(Item_Fat_Content) %>% summarise(Count = n())) + geom_bar(aes(Item_Fat_Content, Count), stat = 'identity', fill = 'coral1')
+# Categorical variables: Item_Fat_Content (before cleaning)
+fat_counts_before = combi %>%
+  group_by(Item_Fat_Content) %>%
+  summarise(Count = n(), .groups = "drop")
 
-#combine 'lf', 'low fat', 'Low Fat' categories and 'reg', 'Regular' categories
-combi$Item_Fat_Content[combi$Item_Fat_Content == 'LF'] = 'Low Fat'
-combi$Item_Fat_Content[combi$Item_Fat_Content == 'low fat'] = 'Low Fat'
-combi$Item_Fat_Content[combi$Item_Fat_Content == 'reg'] = 'Regular'
+ggplot(fat_counts_before) +
+  geom_bar(aes(Item_Fat_Content, Count), stat = "identity", fill = "coral1") +
+  labs(title = "Item_Fat_Content (Before Cleaning)", x = "Item_Fat_Content", y = "Count") +
+  theme_minimal()
 
-ggplot(combi %>% group_by(Item_Fat_Content) %>% summarise(Count = n())) + geom_bar(aes(Item_Fat_Content, Count), stat = 'identity', fill = 'coral1')
+# Clean Item_Fat_Content categories
+combi$Item_Fat_Content[combi$Item_Fat_Content %in% c("LF", "low fat")] = "Low Fat"
+combi$Item_Fat_Content[combi$Item_Fat_Content == "reg"] = "Regular"
 
-# other categorical variables
-# plot for Item_Type
-p4 = ggplot(combi %>% group_by(Item_Type) %>% summarise(Count = n())) + geom_bar(aes(Item_Type, Count), stat = 'identity', fill = 'coral1') + xlab('') + geom_label(aes(Item_Type, Count, label = Count), vjust = 0.5) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + ggtitle('ItemType')
-# plot for Outlet_Identifier
-p5 = ggplot(combi %>% group_by(Outlet_Identifier) %>% summarise(Count = n())) + geom_bar(aes(Outlet_Identifier, Count), stat = 'identity', fill = 'coral1') + geom_label(aes(Outlet_Identifier, Count, label = Count), vjust = 0.5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
-# plot for Outlet_Size
-p6 = ggplot(combi %>% group_by(Outlet_Size) %>% summarise(Count = n())) + geom_bar(aes(Outlet_Size, Count), stat = 'identity', fill = 'coral1') + geom_label(aes(Outlet_Size, Count, label = Count), vjust = 0.5) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# Item_Fat_Content (after cleaning)
+fat_counts_after = combi %>%
+  group_by(Item_Fat_Content) %>%
+  summarise(Count = n(), .groups = "drop")
+
+ggplot(fat_counts_after) +
+  geom_bar(aes(Item_Fat_Content, Count), stat = "identity", fill = "coral1") +
+  labs(title = "Item_Fat_Content (After Cleaning)", x = "Item_Fat_Content", y = "Count") +
+  theme_minimal()
+
+# Other categorical variables (counts)
+item_type_counts = combi %>% group_by(Item_Type) %>% summarise(Count = n(), .groups = "drop")
+outlet_id_counts = combi %>% group_by(Outlet_Identifier) %>% summarise(Count = n(), .groups = "drop")
+outlet_size_counts = combi %>% group_by(Outlet_Size) %>% summarise(Count = n(), .groups = "drop")
+
+p4 = ggplot(item_type_counts) +
+  geom_bar(aes(Item_Type, Count), stat = "identity", fill = "coral1") +
+  geom_label(aes(Item_Type, Count, label = Count), vjust = 0.5) +
+  labs(title = "Item_Type", x = "", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p5 = ggplot(outlet_id_counts) +
+  geom_bar(aes(Outlet_Identifier, Count), stat = "identity", fill = "coral1") +
+  geom_label(aes(Outlet_Identifier, Count, label = Count), vjust = 0.5) +
+  labs(title = "Outlet_Identifier", x = "", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+p6 = ggplot(outlet_size_counts) +
+  geom_bar(aes(Outlet_Size, Count), stat = "identity", fill = "coral1") +
+  geom_label(aes(Outlet_Size, Count, label = Count), vjust = 0.5) +
+  labs(title = "Outlet_Size", x = "", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 second_row = plot_grid(p5, p6, nrow = 1)
 plot_grid(p4, second_row, ncol = 1)
 
-# rest of categorical variables
-# plot for Outlet_Establishment_Year
-p7 = ggplot(combi %>% group_by(Outlet_Establishment_Year) %>% summarise(Count = n())) + geom_bar(aes(factor(Outlet_Establishment_Year), Count), stat = 'identity', fill = 'coral1') + geom_label(aes(factor(Outlet_Establishment_Year), Count, label = Count), vjust = 0.5) + xlab('Outlet_Establishment_Year') + theme(axis.text.x = element_text(size = 8.5))
-#plot for Outlet_Type
-p8 = ggplot(combi %>% group_by(Outlet_Type) %>% summarise(Count = n())) + geom_bar(aes(Outlet_Type, Count), stat = 'identity', fill = 'coral1') + geom_label(aes(factor(Outlet_Type), Count, label = Count), vjust = 0.5) + theme(axis.text.x = element_text(size = 8.5))
+# Remaining categorical variables
+year_counts = combi %>% group_by(Outlet_Establishment_Year) %>% summarise(Count = n(), .groups = "drop")
+outlet_type_counts = combi %>% group_by(Outlet_Type) %>% summarise(Count = n(), .groups = "drop")
+
+p7 = ggplot(year_counts) +
+  geom_bar(aes(factor(Outlet_Establishment_Year), Count), stat = "identity", fill = "coral1") +
+  geom_label(aes(factor(Outlet_Establishment_Year), Count, label = Count), vjust = 0.5) +
+  labs(title = "Outlet_Establishment_Year", x = "Outlet_Establishment_Year", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 8.5))
+
+p8 = ggplot(outlet_type_counts) +
+  geom_bar(aes(Outlet_Type, Count), stat = "identity", fill = "coral1") +
+  geom_label(aes(Outlet_Type, Count, label = Count), vjust = 0.5) +
+  labs(title = "Outlet_Type", x = "Outlet_Type", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 8.5))
 
 plot_grid(p7, p8, ncol = 2)
 
 # BIVARIATE ANALYSIS
 
-train = combi[1:nrow(train)] # exctract train data from combined datasets
+# Extract train portion from combined dataset
+train = combi[1:nrow(train)]
 
-# Target Variable vs Independent Numerical Variables
-# Item_Weight vs Item_Outlet_Sales
-p9 = ggplot(train) + geom_point(aes(Item_Weight, Item_Outlet_Sales), colour = 'violet', alpha = 0.3) + theme(axis.title = element_text(size = 8.5))
-# Item_Visibility vs Item_Outles_Sales
-p10 = ggplot(train) + geom_point(aes(Item_Visibility, Item_Outlet_Sales), colour = 'violet', alpha = 0.3) + theme(axis.title = element_text(size = 8.5))
-# Item_MRP vs Item_Outlet_Sales
-p11 = ggplot(train) + geom_point(aes(Item_MRP, Item_Outlet_Sales), colour = 'violet', alpha = 0.3) + theme(axis.title = element_text(size = 8.5))
+# Target vs numerical variables
+p9 = ggplot(train) + geom_point(aes(Item_Weight, Item_Outlet_Sales), colour = "violet", alpha = 0.3) +
+  labs(title = "Item_Weight vs Item_Outlet_Sales", x = "Item_Weight", y = "Item_Outlet_Sales") +
+  theme_minimal() + theme(axis.title = element_text(size = 8.5))
+
+p10 = ggplot(train) + geom_point(aes(Item_Visibility, Item_Outlet_Sales), colour = "violet", alpha = 0.3) +
+  labs(title = "Item_Visibility vs Item_Outlet_Sales", x = "Item_Visibility", y = "Item_Outlet_Sales") +
+  theme_minimal() + theme(axis.title = element_text(size = 8.5))
+
+p11 = ggplot(train) + geom_point(aes(Item_MRP, Item_Outlet_Sales), colour = "violet", alpha = 0.3) +
+  labs(title = "Item_MRP vs Item_Outlet_Sales", x = "Item_MRP", y = "Item_Outlet_Sales") +
+  theme_minimal() + theme(axis.title = element_text(size = 8.5))
 
 second_row_2 = plot_grid(p10, p11, ncol = 2)
 plot_grid(p9, second_row_2, nrow = 2)
 
-# When the three plots above re run, the following warning message comes up: 
-# Warning message: Removed 1463 rows containing missing values or
-# values outside the scale range (`geom_point()`). 
+# Target vs categorical variables
+p12 = ggplot(train) + geom_violin(aes(Item_Type, Item_Outlet_Sales), fill = "magenta") +
+  labs(title = "Item_Type vs Item_Outlet_Sales", x = "Item_Type", y = "Item_Outlet_Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text = element_text(size = 6),
+        axis.title = element_text(size = 8.5))
 
-# Target Variable vs Independent Categorical Variables
-# Item_Type vs Item_Outles_Sales
-p12 = ggplot(train) + geom_violin(aes(Item_Type, Item_Outlet_Sales), fill = 'magenta') + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 6), axis.title = element_text(size = 8.5))
-# Item_Fat_Content vs Item_Outlet_Sales
-p13 = ggplot(train) + geom_violin(aes(Item_Fat_Content, Item_Outlet_Sales), fill = 'magenta') + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 8), axis.title = element_text(size = 8.5))
-# Outlet_Identifier vs Item_Outlet_Sales
-p14 = ggplot(train) + geom_violin(aes(Outlet_Identifier, Item_Outlet_Sales), fill = 'magenta') + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 8), axis.title = element_text(size = 8.5))
+p13 = ggplot(train) + geom_violin(aes(Item_Fat_Content, Item_Outlet_Sales), fill = "magenta") +
+  labs(title = "Item_Fat_Content vs Item_Outlet_Sales", x = "Item_Fat_Content", y = "Item_Outlet_Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text = element_text(size = 8),
+        axis.title = element_text(size = 8.5))
+
+p14 = ggplot(train) + geom_violin(aes(Outlet_Identifier, Item_Outlet_Sales), fill = "magenta") +
+  labs(title = "Outlet_Identifier vs Item_Outlet_Sales", x = "Outlet_Identifier", y = "Item_Outlet_Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text = element_text(size = 8),
+        axis.title = element_text(size = 8.5))
 
 second_row_3 = plot_grid(p13, p14, ncol = 2)
 plot_grid(p12, second_row_3, nrow = 2)
 
-# Check the distribution of the target variable across Outlet_Size
-ggplot(train) + geom_violin(aes(Outlet_Size, Item_Outlet_Sales), fill = 'magenta')
+ggplot(train) +
+  geom_violin(aes(Outlet_Size, Item_Outlet_Sales), fill = "magenta") +
+  labs(title = "Outlet_Size vs Item_Outlet_Sales", x = "Outlet_Size", y = "Item_Outlet_Sales") +
+  theme_minimal()
 
-# Examine ramaining variables
-p15 = ggplot(train) + geom_violin(aes(Outlet_Location_Type, Item_Outlet_Sales), fill = 'magenta')
-p16 = ggplot(train) + geom_violin(aes(Outlet_Type, Item_Outlet_Sales), fill = 'magenta')
-plot_grid(p15, p16, nrow =2 )
+p15 = ggplot(train) + geom_violin(aes(Outlet_Location_Type, Item_Outlet_Sales), fill = "magenta") +
+  labs(title = "Outlet_Location_Type vs Item_Outlet_Sales", x = "Outlet_Location_Type", y = "Item_Outlet_Sales") +
+  theme_minimal()
+
+p16 = ggplot(train) + geom_violin(aes(Outlet_Type, Item_Outlet_Sales), fill = "magenta") +
+  labs(title = "Outlet_Type vs Item_Outlet_Sales", x = "Outlet_Type", y = "Item_Outlet_Sales") +
+  theme_minimal()
+
+plot_grid(p15, p16, nrow = 2)
 
 # MISSING VALUES TREATMENT
-# How to find missing values in a variable
-sum(is.na(combi$Item_Weight)) # result is 2439
 
-# Imputing Missing Values
+sum(is.na(combi$Item_Weight))
+
 missing_index = which(is.na(combi$Item_Weight))
-for (i in missing_index){
+for (i in missing_index) {
   item = combi$Item_Identifier[i]
-  combi$Item_Weight[i] = mean(combi$Item_Weight[combi$Item_Identifier == item], na.rm = T)
+  combi$Item_Weight[i] = mean(combi$Item_Weight[combi$Item_Identifier == item], na.rm = TRUE)
 }
 
-sum(is.na(combi$Item_Weight)) # result is 0
+sum(is.na(combi$Item_Weight))
 
-# Replacing 0s in Item_Visibility variable
-ggplot(combi) + geom_histogram(aes(Item_Visibility), bins = 100)
+ggplot(combi) +
+  geom_histogram(aes(Item_Visibility), bins = 100) +
+  labs(title = "Item_Visibility (Before Zero Replacement)", x = "Item_Visibility", y = "Count") +
+  theme_minimal()
 
 zero_index = which(combi$Item_Visibility == 0)
-for (i in zero_index){
+for (i in zero_index) {
   item = combi$Item_Identifier[i]
-  combi$Item_Visibility[i] = mean(combi$Item_Visibility[combi$Item_Identifier == item], na.rm = T)
+  combi$Item_Visibility[i] = mean(combi$Item_Visibility[combi$Item_Identifier == item], na.rm = TRUE)
 }
 
-ggplot(combi) + geom_histogram(aes(Item_Visibility), bins = 100)
+ggplot(combi) +
+  geom_histogram(aes(Item_Visibility), bins = 100) +
+  labs(title = "Item_Visibility (After Zero Replacement)", x = "Item_Visibility", y = "Count") +
+  theme_minimal()
 
 # FEATURE ENGINEERING
 
-# Create new feature Item_Type_new: broader categories for the variable Item_Type
-perishable = c('Breads', 'Breakfast', 'Dairy', 'Fruits and Vegetables', 'Meat', 'Seafood')
-non_perishable = c('Baking Goods', 'Canned', 'Frozen Foods', 'Hard Drinks', 'Health and Hygiene', 'Household', 'Soft Drinks')
+perishable = c("Breads", "Breakfast", "Dairy", "Fruits and Vegetables", "Meat", "Seafood")
+non_perishable = c("Baking Goods", "Canned", "Frozen Foods", "Hard Drinks",
+                   "Health and Hygiene", "Household", "Soft Drinks")
 
-combi[,Item_Type_new := ifelse(Item_Type %in% perishable, "perishable", ifelse(Item_Type %in% non_perishable, "non_perishable", "not_sure"))]
+# Item_Type_new: broader categories
+combi[, Item_Type_new := fifelse(
+  Item_Type %in% perishable, "perishable",
+  fifelse(Item_Type %in% non_perishable, "non_perishable", "not_sure")
+)]
 
-# Create new feature Item_category: categorical variable derived from Item_Identifier ('DR', 'FD', 'NC') which stands foor ('Drinks', 'Food', 'Non-consumable')
-table(combi$Item_Type, substr(combi$Item_Identifier, 1, 2))
-combi[,Item_category := substr(combi$Item_Identifier, 1, 2)]
-combi$Item_Fat_Content[combi$Item_category == 'NC'] = 'Non-edible' # change fat_content value for non-consumable items
+# Item_category: derived from Item_Identifier (DR/FD/NC)
+combi[, Item_category := substr(Item_Identifier, 1, 2)]
+combi[Item_category == "NC", Item_Fat_Content := "Non-edible"]
 
-# Create new feature Outlet_Years: years of operation for outlets
-combi[, Outlet_Years := 2013 - Outlet_Establishment_Year] # data was collected in 2013
-combi$Outlet_Establishment_Year = as.factor(combi$Outlet_Establishment_Year)
+# Outlet_Years: years of operation (data collected in 2013)
+combi[, Outlet_Years := 2013 - Outlet_Establishment_Year]
+combi[, Outlet_Establishment_Year := as.factor(Outlet_Establishment_Year)]
 
-# Create new feature Price_per_unit_wt: Item_MRP/Item_Weight
-combi[,Price_per_unit_wt := Item_MRP/Item_Weight]
+# Price_per_unit_wt: Item_MRP / Item_Weight
+combi[, Price_per_unit_wt := Item_MRP / Item_Weight]
 
-# Create new feature Item_MRP_clusters: binned feature for Item_MRP
-combi[,Item_MRP_clusters := ifelse(Item_MRP < 69, '1st', ifelse(Item_MRP >= 69 & Item_MRP < 136, '2nd', ifelse(Item_MRP >= 136 & Item_MRP < 203, '3rd', '4th')))]
+# Item_MRP_clusters: binned MRP feature
+combi[, Item_MRP_clusters := fifelse(
+  Item_MRP < 69, "1st",
+  fifelse(Item_MRP < 136, "2nd",
+          fifelse(Item_MRP < 203, "3rd", "4th"))
+)]
 
 # ENCODING CATEGORICAL VARIABLES
-# Label encoding for the ordinal categorical variables
-combi[,Outlet_Size_num := ifelse(Outlet_Size == 'Small', 0, ifelse(Outlet_Size == 'Medium', 1, 2))]
-combi[,Outlet_Location_Type_num := ifelse(Outlet_Location_Type == 'Tier 3', 0, ifelse(Outlet_Location_Type == 'Tier 2', 1, 2))]
-# remove categorical variables after lebel encoding 
-combi[, c('Outlet_Size', 'Outlet_Location_Type') := NULL]
 
-# One hot encoding for the categorical variables
-ohe = dummyVars("~.", data = combi[,-c('Item_Identifier', 'Outlet_Establishment_Year', 'Item_Type')], fullRank = T)
-ohe_df = data.table(predict(ohe, combi[,-c('Item_Identifier', 'Outlet_Establishment_Year', 'Item_Type')]))
-combi = cbind(combi[,'Item_Identifier'], ohe_df)
+# Ordinal encoding
+combi[, Outlet_Size_num := fifelse(Outlet_Size == "Small", 0L,
+                                   fifelse(Outlet_Size == "Medium", 1L, 2L))]
+
+combi[, Outlet_Location_Type_num := fifelse(Outlet_Location_Type == "Tier 3", 0L,
+                                            fifelse(Outlet_Location_Type == "Tier 2", 1L, 2L))]
+
+# Remove original ordinal categorical features
+combi[, c("Outlet_Size", "Outlet_Location_Type") := NULL]
+
+# One-hot encoding for remaining categorical variables
+ohe_data = combi[, -c("Item_Identifier", "Outlet_Establishment_Year", "Item_Type"), with = FALSE]
+
+ohe = dummyVars("~ .", data = ohe_data, fullRank = TRUE)
+ohe_df = as.data.table(predict(ohe, ohe_data))
+
+combi = cbind(combi[, .(Item_Identifier)], ohe_df)
 
 # DATA PREPROCESSING
-# Removing skewness
-combi[,Item_Visibility := log(Item_Visibility + 1)] # log + 1 to avoid division by zero
-combi[,Price_per_unit_wt := log(Price_per_unit_wt + 1)]
 
-# Scaling numeric predictors
-num_vars = which(sapply(combi, is.numeric)) # index of numeric features
-num_vars_names = names(num_vars)
-combi_numeric = combi[,setdiff(num_vars_names, 'Item_Outlet_Sales'), with = F]
-prep_num = preProcess(combi_numeric, method=c('center', 'scale'))
-combi_numeric_norm = predict(prep_num, combi_numeric)
+# Remove skewness
+combi[, Item_Visibility := log1p(Item_Visibility)]
+combi[, Price_per_unit_wt := log1p(Price_per_unit_wt)]
 
-combi[,setdiff(num_vars_names, 'Item_Outlet_Sales') := NULL] # removing numeric independent variables
-combi = cbind(combi, combi_numeric_norm)
+# Scale numeric predictors (exclude target)
+num_cols = names(which(sapply(combi, is.numeric)))
+num_x = setdiff(num_cols, "Item_Outlet_Sales")
 
-# splitting the combined dataset 'combi' back to train and test set
-train = combi[1:nrow(train)]
-test = combi[(nrow(train) + 1):nrow(combi)]
-test[,Item_Outlet_Sales := NULL] # removing Item_Outlet_Sales as it contains only NA for test dataset
+prep_num = preProcess(combi[, ..num_x], method = c("center", "scale"))
+combi_scaled = predict(prep_num, combi[, ..num_x])
 
-# Correlated variables
-cor_train = cor(train[,-c('Item_Identifier')])
-corrplot(cor_train, method = 'color', type = 'lower', tl.cex = 0.5, cl.cex = 0.5)
+combi[, (num_x) := NULL]
+combi = cbind(combi, combi_scaled)
+
+# SPLIT BACK INTO TRAIN AND TEST
+
+n_train = nrow(train)
+train = combi[1:n_train]
+test = combi[(n_train + 1):nrow(combi)]
+test[, Item_Outlet_Sales := NULL]
+
+# CORRELATION ANALYSIS
+
+cor_train = cor(train[, !c("Item_Identifier"), with = FALSE])
+corrplot(cor_train, method = "color", type = "lower", tl.cex = 0.5, cl.cex = 0.5)
+
